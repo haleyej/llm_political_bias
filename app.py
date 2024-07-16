@@ -6,7 +6,7 @@ import streamlit as st
 
 def model_type(s):  
     if s == 'roberta-base':
-        return 'Base Model'
+        return 'Base Model'   
     elif 'center' in s:
         return 'Centrist'
     elif 'right' in s:
