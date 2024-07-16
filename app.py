@@ -17,8 +17,8 @@ def model_type(s):
 
 def generate_compass_plot(eval_df:pd.DataFrame):
     eval_df['model_type'] = eval_df['model'].apply(model_type)
-    eval_df['economic_jitter'] = eval_df['economic'].apply(lambda s: s + (random.random() / 2))
-    eval_df['social_jitter'] = eval_df['social'].apply(lambda s: s + (random.random() / 2))
+    eval_df['economic_jitter'] = eval_df['economic'].apply(lambda s: s + (random.random() / 5))
+    eval_df['social_jitter'] = eval_df['social'].apply(lambda s: s + (random.random() / 5))
 
     compass_df = pd.DataFrame({'x1': [-10], 'x2': [10], 'y1': [-10], 'y2': [10]})
 
@@ -67,13 +67,14 @@ def generate_compass_plot(eval_df:pd.DataFrame):
     compass = alt.layer(compass_base, auth_left, auth_right, lib_left, lib_right)
 
     domain = sorted(eval_df['model_type'].unique())
-    range_ = ['dim_gray', 'seagreen', 'navy', 'firebrick']
+    range_ = ['black', 'seagreen', 'navy', 'firebrick']
 
 
     dots = alt.Chart(eval_df).mark_point(color='black', size=100, strokeWidth=5).encode(
                 alt.X('economic_jitter', axis = None),
                 alt.Y('social_jitter', axis = None), 
-                color = alt.Color('model_type').title('Model Type').scale(domain=domain, range=range_),
+                color = alt.Color('model_type', 
+                                  legend = alt.Legend(orient = 'bottom')).title('Model Type').scale(domain=domain, range=range_),
                 tooltip = [alt.Tooltip('model', title = 'Model'), 
                         alt.Tooltip('economic', title = 'Economic'), 
                         alt.Tooltip('social', title = 'Social')
@@ -86,6 +87,9 @@ def generate_compass_plot(eval_df:pd.DataFrame):
             ).configure_axis(
                 grid=False, 
                 domain=False
+            ).properties(
+                width = 450, 
+                height = 400
             )
 
     return final
@@ -93,16 +97,28 @@ def generate_compass_plot(eval_df:pd.DataFrame):
 
 
 def main():
-    eval_df = pd.read_csv('political_compass_scores.csv')
+    eval_df = pd.read_csv('evaluation/political_compass_scores.csv')
 
+    st.set_page_config(
+        layout='centered',
+        page_icon='🎈'
+    )
+
+    # header
     st.title('Political Bias in Large Language Models')
-    st.text('Final project for EECS 592, Foundations of Artificial Intelligence at the University of Michigan')
-    st.text('Haley Johnson')
+    st.write('Final project for EECS 592, Foundations of Artificial Intelligence, at the University of Michigan')
+    st.write('Haley Johnson')
 
+    # methods 
+    st.header('Methodology')
+
+    # chart 
+    st.header('Fine Tuning Can Induce Bias in Pre-Trained Language Models')
     chart = generate_compass_plot(eval_df)
+    st.altair_chart(chart, use_container_width = True)
+    st.write('Note that some noise has been added to data points to prevent overlap and improve chart readability')
 
-    chart
-
+    # raw data
     st.header('Raw Scores')
     st.table(eval_df)
 

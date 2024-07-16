@@ -1,0 +1,8 @@
+model,economic,social
+roberta-base,-2,0
+news-center,0,-5
+news-left,0,-5
+news-right,0,-5
+reddit-center,-2,-2
+reddit-left,-2,-2
+reddit-right,0,3
