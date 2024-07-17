@@ -144,7 +144,7 @@ def main():
     # methods 
     st.header('Methodology')
     st.write(methods)
-    st.markdown('For more details see [these slides](https://github.com/haleyej/eecs_592_project/blob/main/slides.pdf)')
+    st.write('For more details see [these slides](https://github.com/haleyej/eecs_592_project/blob/main/slides.pdf)')
 
     # chart 
     st.header('Fine Tuning Can Induce Bias in Pre-Trained Language Models')
