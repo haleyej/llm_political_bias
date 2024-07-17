@@ -123,7 +123,6 @@ def load_methodology_statement(path:str) -> str:
 def main():
     # load helper files
     eval_statements = load_eval_statements('evaluation/political_compass.jsonl')
-    st.write(eval_statements)
     eval_df = pd.read_csv('evaluation/political_compass_scores.csv')
     eval_df_plain = eval_df.copy(deep = True)
     eval_df_plain.columns = ['Model', 'Economic Score', 'Social Score']
