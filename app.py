@@ -127,8 +127,8 @@ def main():
     methods = load_methodology_statement('evaluation/methods.txt')
 
     # set up models
-    news_right = set_up_model('models/news-right')
-    reddit_left = set_up_model('models/reddit-left')
+    news_right = set_up_model('haleyej/news-right')
+    reddit_left = set_up_model('haleyej/reddit-left')
     roberta_base = set_up_model('roberta-base')
 
     st.set_page_config(
