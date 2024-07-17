@@ -122,7 +122,6 @@ def load_methodology_statement(path:str) -> str:
 
 def main():
     # load helper files
-    st.write(list(os.listdir('evaluation')))
     eval_statements = load_eval_statements('evaluation/political_compass.jsonl')
     eval_df = pd.read_csv('evaluation/political_compass_scores.csv')
     eval_df_plain = eval_df.copy(deep = True)
