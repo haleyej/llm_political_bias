@@ -159,7 +159,7 @@ def main():
     st.table(eval_df_plain)
 
     # model interactive
-    st.header('Political Models')
+    st.header('The Political Compass Test as a Masked Language Modeling Task')
     statement = st.selectbox('Select a political compass question: ', eval_statements)
 
     prompt = f"Please respond to the following statement: {statement} I <mask> with this statement."
