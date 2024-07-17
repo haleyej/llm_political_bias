@@ -1,7 +1,19 @@
+import json
 import random
 import pandas as pd
 import altair as alt
 import streamlit as st
+
+from transformers import pipeline, RobertaTokenizerFast, AutoModelForMaskedLM
+
+
+def load_eval_statements(path:str) -> list[str]:
+    statements = []
+    with open(path) as f: 
+        lines = json.loads(f.read())
+        for line in lines:
+            statements.append(line['statement'])
+    return statements
 
 
 def model_type(s):  
@@ -15,10 +27,10 @@ def model_type(s):
         return 'Left Leaning'
     
 
-def generate_compass_plot(eval_df:pd.DataFrame):
+def generate_compass_plot(eval_df: pd.DataFrame):
     eval_df['model_type'] = eval_df['model'].apply(model_type)
-    eval_df['economic_jitter'] = eval_df['economic'].apply(lambda s: s + (random.random() / 5))
-    eval_df['social_jitter'] = eval_df['social'].apply(lambda s: s + (random.random() / 5))
+    eval_df['economic_jitter'] = eval_df['economic'].apply(lambda s: s + (random.random() / 3))
+    eval_df['social_jitter'] = eval_df['social'].apply(lambda s: s + (random.random() / 3))
 
     compass_df = pd.DataFrame({'x1': [-10], 'x2': [10], 'y1': [-10], 'y2': [10]})
 
@@ -70,7 +82,7 @@ def generate_compass_plot(eval_df:pd.DataFrame):
     range_ = ['black', 'seagreen', 'navy', 'firebrick']
 
 
-    dots = alt.Chart(eval_df).mark_point(color='black', size=100, strokeWidth=5).encode(
+    dots = alt.Chart(eval_df).mark_point(color='black', size=150, strokeWidth=5).encode(
                 alt.X('economic_jitter', axis = None),
                 alt.Y('social_jitter', axis = None), 
                 color = alt.Color('model_type', 
@@ -90,14 +102,34 @@ def generate_compass_plot(eval_df:pd.DataFrame):
             ).properties(
                 width = 450, 
                 height = 400
-            )
+            ).interactive()
 
     return final
 
 
+def set_up_model(model_path:str):
+    tokenizer = RobertaTokenizerFast.from_pretrained('roberta-base', do_lower_case = True)
+    model = AutoModelForMaskedLM.from_pretrained(model_path)
+    mask_fill = pipeline('fill-mask', model = model, tokenizer = tokenizer, top_k = 1)
+    return mask_fill
+
+def load_methodology_statement(path:str) -> str:
+    with open(path) as f:
+        text = f.read().strip()
+    return text
 
 def main():
+    # load helper files
+    eval_statements = load_eval_statements('evaluation/political_compass.jsonl')
     eval_df = pd.read_csv('evaluation/political_compass_scores.csv')
+    eval_df_plain = eval_df.copy(deep = True)
+    eval_df_plain.columns = ['Model', 'Economic Score', 'Social Score']
+    methods = load_methodology_statement('evaluation/methods.txt')
+
+    # set up models
+    news_right = set_up_model('models/news-right')
+    reddit_left = set_up_model('models/reddit-left')
+    roberta_base = set_up_model('roberta-base')
 
     st.set_page_config(
         layout='centered',
@@ -111,16 +143,37 @@ def main():
 
     # methods 
     st.header('Methodology')
+    st.write(methods)
+    st.markdown('For more details see [these slides](https://github.com/haleyej/eecs_592_project/blob/main/slides.pdf)')
 
     # chart 
     st.header('Fine Tuning Can Induce Bias in Pre-Trained Language Models')
     chart = generate_compass_plot(eval_df)
     st.altair_chart(chart, use_container_width = True)
-    st.write('Note that some noise has been added to data points to prevent overlap and improve chart readability')
+    st.write('Note that some noise has been added to the data to mitigate overlapping points and improve chart readability')
 
     # raw data
-    st.header('Raw Scores')
-    st.table(eval_df)
+    st.subheader('Raw Scores')
+    st.table(eval_df_plain)
+
+    # model interactive
+    st.header('Political Models')
+    statement = st.selectbox('Select a political compass question: ', eval_statements)
+
+    prompt = f"Please respond to the following statement: {statement} I <mask> with this statement."
+    st.write(f'**Prompt**: Please respond to the following statement: {statement} I **<mask>** with this statement.')
+    st.write('The model will replace **<mask>** with what is thinks the most likely missing word is')
+
+    new_right_response = news_right(prompt)[0].get('token_str', '').strip()
+    reddit_left_response = reddit_left(prompt)[0].get('token_str', '').strip()
+    roberta_base_response = roberta_base(prompt)[0].get('token_str', '').strip()
+
+    st.subheader('Language Model Predictions')
+
+    st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response}** with this statement')
+    st.write(f'Right Leaning News: I **{reddit_left_response}** with this statement')
+    st.write(f'Right Leaning News: I **{roberta_base_response}** with this statement')
+
 
 if __name__ == '__main__':
     main()
