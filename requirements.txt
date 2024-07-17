@@ -1,2 +1,1 @@
-transformers
-pandas
+transformers=4.42.4

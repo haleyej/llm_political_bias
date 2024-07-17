@@ -171,7 +171,6 @@ def main():
     roberta_base_response = roberta_base(prompt)[0].get('token_str', '').strip()
 
     st.subheader('Language Model Predictions')
-
     st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response}** with this statement')
     st.write(f'Right Leaning News: I **{reddit_left_response}** with this statement')
     st.write(f'Right Leaning News: I **{roberta_base_response}** with this statement')
