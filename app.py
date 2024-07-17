@@ -1,9 +1,9 @@
+import os
 import json
 import random
 import pandas as pd
 import altair as alt
 import streamlit as st
-
 from transformers import pipeline, RobertaTokenizerFast, AutoModelForMaskedLM
 
 
@@ -113,13 +113,16 @@ def set_up_model(model_path:str):
     mask_fill = pipeline('fill-mask', model = model, tokenizer = tokenizer, top_k = 1)
     return mask_fill
 
+
 def load_methodology_statement(path:str) -> str:
     with open(path) as f:
         text = f.read().strip()
     return text
 
+
 def main():
     # load helper files
+    st.write(list(os.listdir('evaluation')))
     eval_statements = load_eval_statements('evaluation/political_compass.jsonl')
     eval_df = pd.read_csv('evaluation/political_compass_scores.csv')
     eval_df_plain = eval_df.copy(deep = True)
