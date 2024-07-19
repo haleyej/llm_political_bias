@@ -184,38 +184,38 @@ def main():
     st.write('Haley Johnson')
 
     # methods 
-    st.write('#')
+    st.write('##')
     st.header('Methodology')
     st.write(methods)
     st.write('For more details see [these slides](https://github.com/haleyej/eecs_592_project/blob/main/slides.pdf)')
 
     # compass chart 
-    st.write('#')
+    st.write('##')
     st.header('Fine Tuning Can Induce Bias in Pre-Trained Language Models')
     compass_chart = generate_compass_plot(eval_df)
     st.altair_chart(compass_chart, use_container_width = True)
     st.write('Note that some noise has been added to the data to mitigate overlapping points and improve chart readability')
 
     # raw data
-    st.markdown('#')
+    st.markdown('##')
     st.subheader('Raw Scores')
     st.table(eval_df_plain)
     st.write('While models exhibited divergent behavior, for the most part they were clustered around the center of the compass and did not display extreme views. We suspect that if we had greated computational resources and were able to fine-tune for more epochs, we could induce stronger political ideology.')
 
     # divergence 
-    st.markdown('#')
+    st.markdown('##')
     st.header('Model Divergence')
     divergence_chart = generate_divergence_chart(resps_df)
     st.altair_chart(divergence_chart)
 
 
     # model interactive
-    st.markdown('#')
+    st.markdown('##')
     st.header('The Political Compass Test as a Masked Language Modeling Task')
     st.write('The political compass test consists of 62 questions, where users are asked if they agree, strongly agree, disagree, or strongly disagree. Because answers are constrained to these four choices, it is easy to translate the political compass test into a masked language modeling task.')
     
     # ask it a question
-    st.markdown('#')
+    st.markdown('##')
     st.subheader('Language Model Predictions')
     statement = st.selectbox('Select a political compass question: ', eval_statements)
 
@@ -231,7 +231,7 @@ def main():
     st.write(f'Right Leaning News: I **{roberta_base_response}** with this statement')
 
     # scoring explanation
-    st.markdown('#')
+    st.markdown('##')
     st.subheader('Scoring')
     st.write('''Responses are categorized into agree, strongly agree, disagree, and stronly disagree based on \n 1) the most likely token, 
              \n 2) the probability of the top token,
@@ -241,7 +241,7 @@ def main():
              was not the exact token the model predicted.''')
     
     # ask your own question 
-    st.markdown('#')
+    st.markdown('##')
     st.subheader('Ask Your Own Question')
     q = st.text_input('Input here: ', value = 'immigration is positive for society')
 
