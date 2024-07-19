@@ -1,4 +1,3 @@
-import os
 import json
 import random
 import pandas as pd
@@ -8,6 +7,9 @@ from transformers import pipeline, RobertaTokenizerFast, AutoModelForMaskedLM
 
 
 def load_eval_statements(path:str) -> list[str]:
+    '''
+    loads in json file with political compass test questions
+    '''
     statements = []
     with open(path) as f: 
         lines = json.loads(f.read())
@@ -17,6 +19,9 @@ def load_eval_statements(path:str) -> list[str]:
 
 
 def model_type(s):  
+    '''
+    helper function to rename models
+    '''
     if s == 'roberta-base':
         return 'Base Model'   
     elif 'center' in s:
@@ -28,6 +33,9 @@ def model_type(s):
     
 
 def generate_compass_plot(eval_df: pd.DataFrame):
+    '''
+    plot model results on political compass
+    '''
     eval_df['model_type'] = eval_df['model'].apply(model_type)
     eval_df['economic_jitter'] = eval_df['economic'].apply(lambda s: s + (random.random() / 3))
     eval_df['social_jitter'] = eval_df['social'].apply(lambda s: s + (random.random() / 3))
@@ -112,6 +120,9 @@ def generate_compass_plot(eval_df: pd.DataFrame):
 
 
 def generate_divergence_chart(resps_df:pd.DataFrame):
+    '''
+    plot to show how models diverage on political compass questions
+    '''
     # manipulate data
     resps_df = pd.melt(resps_df, id_vars = ['statement'], 
                     value_vars = ['reddit-left', 'reddit-right', 'reddit-center', 'roberta-base', 'news-left', 'news-right', 'news-center'])
@@ -150,6 +161,9 @@ def generate_divergence_chart(resps_df:pd.DataFrame):
 
 
 def set_up_model(model_path:str):
+    '''
+    loads in model, sets up masked fill pipeline
+    '''
     tokenizer = RobertaTokenizerFast.from_pretrained('roberta-base', do_lower_case = True)
     model = AutoModelForMaskedLM.from_pretrained(model_path)
     mask_fill = pipeline('fill-mask', model = model, tokenizer = tokenizer, top_k = 1)
@@ -157,12 +171,19 @@ def set_up_model(model_path:str):
 
 
 def load_methodology_statement(path:str) -> str:
+    '''
+    loads in .txt file with short methodology blurb
+    '''
     with open(path) as f:
         text = f.read().strip()
     return text
 
 
 def main():
+    '''
+    where the magic happens, 
+    puts streamlit site all together
+    '''
     # load helper files
     eval_statements = load_eval_statements('evaluation/political_compass.jsonl')
     eval_df = pd.read_csv('evaluation/political_compass_scores.csv')
@@ -260,7 +281,6 @@ def main():
     st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response_q}** with this statement')
     #st.write(f'Left Leaning Reddit Posts: I **{reddit_left_response_q}** with this statement')
     st.write(f'Right Leaning News: I **{roberta_base_response_q}** with this statement')
-
 
 
 if __name__ == '__main__':
