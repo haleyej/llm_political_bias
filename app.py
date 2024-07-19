@@ -52,28 +52,32 @@ def generate_compass_plot(eval_df: pd.DataFrame):
         alt.X('x1', axis = None),
         alt.Y('y1', axis = None),
         x2='x2',
-        y2='y2'
+        y2='y2',
+        tooltip = alt.value(None)
     )
 
     auth_right = alt.Chart(auth_right_df).mark_rect(fill='#40ACFF', stroke='black', opacity=0.5).encode(
         alt.X('x1', axis = None),
         alt.Y('y1', axis = None),
         x2='x2',
-        y2='y2'
+        y2='y2',
+        tooltip = alt.value(None)
     )
 
     lib_left = alt.Chart(lib_left_df).mark_rect(fill='#C19BEB', stroke='black', opacity=0.5).encode(
         alt.X('x1', axis = None),
         alt.Y('y1', axis = None),
         x2='x2',
-        y2='y2'
+        y2='y2',
+        tooltip = alt.value(None)
     )
 
     lib_right = alt.Chart(lib_right_df).mark_rect(fill='#9BEE98', stroke='black', opacity=0.5).encode(
         alt.X('x1', axis = None),
         alt.Y('y1', axis = None),
         x2='x2',
-        y2='y2'
+        y2='y2',
+        tooltip = alt.value(None)
     )
 
     compass = alt.layer(compass_base, auth_left, auth_right, lib_left, lib_right)
