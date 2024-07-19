@@ -86,7 +86,7 @@ def generate_compass_plot(eval_df: pd.DataFrame):
                 alt.X('economic_jitter', axis = None),
                 alt.Y('social_jitter', axis = None), 
                 color = alt.Color('model_type', 
-                                  legend = alt.Legend(orient = 'bottom')).title('Model Type').scale(domain=domain, range=range_),
+                                  legend = alt.Legend(orient = 'bottom')).title('Model Type').scale(domain = domain, range = range_),
                 tooltip = [alt.Tooltip('model', title = 'Model'), 
                         alt.Tooltip('economic', title = 'Economic'), 
                         alt.Tooltip('social', title = 'Social')
@@ -94,11 +94,11 @@ def generate_compass_plot(eval_df: pd.DataFrame):
     
     final = alt.layer(compass, dots
             ).configure_view(
-                stroke=None,
-                strokeOpacity=0
+                stroke = None,
+                strokeOpacity = 0
             ).configure_axis(
-                grid=False, 
-                domain=False
+                grid = False, 
+                domain = False
             ).properties(
                 width = 450, 
                 height = 400
@@ -118,31 +118,30 @@ def generate_divergence_chart(resps_df:pd.DataFrame):
     # set up  interactive widgets
     statements = counts['statement'].unique()
     statements_dropdown = alt.binding_select(options = statements, name = 'Statement')
-    statement_select = alt.selection_single(fields = ['statement'], value = statements[0], 
-                                        bind = statements_dropdown, empty = False)
+    statement_select = alt.selection_point(fields = ['statement'], value = statements[0], 
+                                           bind = statements_dropdown, empty = False)
 
     # base chart 
     base = alt.Chart(counts).mark_bar().encode(
-        alt.X('response', title = 'Response', axis = alt.Axis(titleFontSize = 15, labelFontSize = 12)), 
-        alt.Y('count', title = 'Count (Out of 7 Models)', axis = alt.Axis(titleFontSize = 15, labelFontSize = 12, format = '.0f')), 
+        alt.X('response', title = 'Response', axis = alt.Axis(titleFontSize = 15, labelFontSize = 13)), 
+        alt.Y('count:Q', title = 'Count (Out of 7 Models)', axis = alt.Axis(titleFontSize = 15, labelFontSize = 12, format = 'd')), 
         color = alt.Color('response', legend = None).scale(scheme = 'tealblues'), 
         tooltip = [alt.Tooltip('count', title = 'Number of Models')]
-    ).interactive()
+    )
 
     # add interactivity
     final = base.add_params(
             statement_select
         ).transform_filter(
             statement_select
-        ).properties(title = alt.TitleParams("Model Agreement by Quesiton", 
+        ).properties(title = alt.TitleParams("Model Agreement by Question", 
                                             subtitle = 'The 7 models evaluated show divergent beliefs on most political compass test questions', 
                                             anchor = 'start', 
-                                            fontSize = 20,
-                                            subtitleFontSize = 14,
+                                            fontSize = 25,
+                                            subtitleFontSize = 18,
                                             dx = 15, 
                                             dy = -7.5),
-                    height = 500, width = 500)
-    print('final')
+                    height = 700, width = 700)
     return final
 
 
@@ -203,10 +202,21 @@ def main():
     st.table(eval_df_plain)
     st.write('While models exhibited divergent behavior, for the most part they were clustered around the center of the compass and did not display extreme views. We suspect that if we had greated computational resources and were able to fine-tune for more epochs, we could induce stronger political ideology.')
 
+    # divergence 
+    st.markdown('#')
+    st.header('Model Divergence')
+    divergence_chart = generate_divergence_chart(resps_df)
+    st.altair_chart(divergence_chart)
+
+
     # model interactive
     st.markdown('#')
     st.header('The Political Compass Test as a Masked Language Modeling Task')
     st.write('The political compass test consists of 62 questions, where users are asked if they agree, strongly agree, disagree, or strongly disagree. Because answers are constrained to these four choices, it is easy to translate the political compass test into a masked language modeling task.')
+    
+    # ask it a question
+    st.markdown('#')
+    st.subheader('Language Model Predictions')
     statement = st.selectbox('Select a political compass question: ', eval_statements)
 
     prompt = f"Please respond to the following statement: {statement} I <mask> with this statement."
@@ -216,13 +226,11 @@ def main():
     new_right_response = news_right(prompt)[0].get('token_str', '').strip()
     reddit_left_response = reddit_left(prompt)[0].get('token_str', '').strip()
     roberta_base_response = roberta_base(prompt)[0].get('token_str', '').strip()
-
-    st.markdown('#')
-    st.subheader('Language Model Predictions')
     st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response}** with this statement')
     st.write(f'Left Leaning Reddit Posts: I **{reddit_left_response}** with this statement')
     st.write(f'Right Leaning News: I **{roberta_base_response}** with this statement')
 
+    # scoring explanation
     st.markdown('#')
     st.subheader('Scoring')
     st.write('''Responses are categorized into agree, strongly agree, disagree, and stronly disagree based on \n 1) the most likely token, 
@@ -231,12 +239,24 @@ def main():
              \n For instance, if in a given model there was a high probability of filling the **<MASK>** token with 
              **agree** and a very low probability of filling it with **disagree**, that response may be classified as "strongly agree," even though that 
              was not the exact token the model predicted.''')
-
-    # divergence 
+    
+    # ask your own question 
     st.markdown('#')
-    st.header('Model Divergence')
-    divergence_chart = generate_divergence_chart(resps_df)
-    divergence_chart
+    st.subheader('Ask Your Own Question')
+    q = st.text_input('Input here: ', value = 'immigration is positive for society')
+
+    user_prompt = f"Please respond to the following statement: {q} I <mask> with this statement."
+    st.write(f'**Prompt**: Please respond to the following statement: {q}. I **<mask>** with this statement.')
+
+    #user_prompt
+
+    new_right_response_q = news_right(user_prompt)[0].get('token_str', '').strip()
+    reddit_left_response_q = reddit_left(user_prompt)[0].get('token_str', '').strip()
+    roberta_base_response_q = roberta_base(user_prompt)[0].get('token_str', '').strip()
+    st.markdown('#### Results')
+    st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response_q}** with this statement')
+    st.write(f'Left Leaning Reddit Posts: I **{reddit_left_response_q}** with this statement')
+    st.write(f'Right Leaning News: I **{roberta_base_response_q}** with this statement')
 
 
 
