@@ -107,6 +107,45 @@ def generate_compass_plot(eval_df: pd.DataFrame):
     return final
 
 
+def generate_divergence_chart(resps_df:pd.DataFrame):
+    # manipulate data
+    resps_df = pd.melt(resps_df, id_vars = ['statement'], 
+                    value_vars = ['reddit-left', 'reddit-right', 'reddit-center', 'roberta-base', 'news-left', 'news-right', 'news-center'])
+    
+    counts = resps_df.groupby(['statement', 'value']).count().unstack(fill_value=0).stack().reset_index()
+    counts.columns = ['statement', 'response', 'count']
+
+    # set up  interactive widgets
+    statements = counts['statement'].unique()
+    statements_dropdown = alt.binding_select(options = statements, name = 'Statement')
+    statement_select = alt.selection_single(fields = ['statement'], value = statements[0], 
+                                        bind = statements_dropdown, empty = False)
+
+    # base chart 
+    base = alt.Chart(counts).mark_bar().encode(
+        alt.X('response', title = 'Response', axis = alt.Axis(titleFontSize = 15, labelFontSize = 12)), 
+        alt.Y('count', title = 'Count (Out of 7 Models)', axis = alt.Axis(titleFontSize = 15, labelFontSize = 12, format = '.0f')), 
+        color = alt.Color('response', legend = None).scale(scheme = 'tealblues'), 
+        tooltip = [alt.Tooltip('count', title = 'Number of Models')]
+    ).interactive()
+
+    # add interactivity
+    final = base.add_params(
+            statement_select
+        ).transform_filter(
+            statement_select
+        ).properties(title = alt.TitleParams("Model Agreement by Quesiton", 
+                                            subtitle = 'The 7 models evaluated show divergent beliefs on most political compass test questions', 
+                                            anchor = 'start', 
+                                            fontSize = 20,
+                                            subtitleFontSize = 14,
+                                            dx = 15, 
+                                            dy = -7.5),
+                    height = 500, width = 500)
+    print('final')
+    return final
+
+
 def set_up_model(model_path:str):
     tokenizer = RobertaTokenizerFast.from_pretrained('roberta-base', do_lower_case = True)
     model = AutoModelForMaskedLM.from_pretrained(model_path)
@@ -128,6 +167,8 @@ def main():
     eval_df_plain.columns = ['Model', 'Economic Score', 'Social Score']
     methods = load_methodology_statement('evaluation/methods.txt')
 
+    resps_df = pd.read_csv('evaluation/political_compass_results.csv')
+
     # set up models
     news_right = set_up_model('haleyej/news-right')
     reddit_left = set_up_model('haleyej/reddit-left')
@@ -144,22 +185,28 @@ def main():
     st.write('Haley Johnson')
 
     # methods 
+    st.write('#')
     st.header('Methodology')
     st.write(methods)
     st.write('For more details see [these slides](https://github.com/haleyej/eecs_592_project/blob/main/slides.pdf)')
 
-    # chart 
+    # compass chart 
+    st.write('#')
     st.header('Fine Tuning Can Induce Bias in Pre-Trained Language Models')
-    chart = generate_compass_plot(eval_df)
-    st.altair_chart(chart, use_container_width = True)
+    compass_chart = generate_compass_plot(eval_df)
+    st.altair_chart(compass_chart, use_container_width = True)
     st.write('Note that some noise has been added to the data to mitigate overlapping points and improve chart readability')
 
     # raw data
+    st.markdown('#')
     st.subheader('Raw Scores')
     st.table(eval_df_plain)
+    st.write('While models exhibited divergent behavior, for the most part they were clustered around the center of the compass and did not display extreme views. We suspect that if we had greated computational resources and were able to fine-tune for more epochs, we could induce stronger political ideology.')
 
     # model interactive
+    st.markdown('#')
     st.header('The Political Compass Test as a Masked Language Modeling Task')
+    st.write('The political compass test consists of 62 questions, where users are asked if they agree, strongly agree, disagree, or strongly disagree. Because answers are constrained to these four choices, it is easy to translate the political compass test into a masked language modeling task.')
     statement = st.selectbox('Select a political compass question: ', eval_statements)
 
     prompt = f"Please respond to the following statement: {statement} I <mask> with this statement."
@@ -170,10 +217,27 @@ def main():
     reddit_left_response = reddit_left(prompt)[0].get('token_str', '').strip()
     roberta_base_response = roberta_base(prompt)[0].get('token_str', '').strip()
 
+    st.markdown('#')
     st.subheader('Language Model Predictions')
     st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response}** with this statement')
     st.write(f'Left Leaning Reddit Posts: I **{reddit_left_response}** with this statement')
     st.write(f'Right Leaning News: I **{roberta_base_response}** with this statement')
+
+    st.markdown('#')
+    st.subheader('Scoring')
+    st.write('''Responses are categorized into agree, strongly agree, disagree, and stronly disagree based on \n 1) the most likely token, 
+             \n 2) the probability of the top token,
+             \n 3) the probability of other tokens. 
+             \n For instance, if in a given model there was a high probability of filling the **<MASK>** token with 
+             **agree** and a very low probability of filling it with **disagree**, that response may be classified as "strongly agree," even though that 
+             was not the exact token the model predicted.''')
+
+    # divergence 
+    st.markdown('#')
+    st.header('Model Divergence')
+    divergence_chart = generate_divergence_chart(resps_df)
+    divergence_chart
+
 
 
 if __name__ == '__main__':
