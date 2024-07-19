@@ -249,7 +249,6 @@ def main():
     user_prompt = f"Please respond to the following statement: {q} I <mask> with this statement."
     st.write(f'**Prompt**: Please respond to the following statement: {q}. I **<mask>** with this statement.')
 
-    user_prompt
     new_right_response_q = news_right(user_prompt)[0].get('token_str', '').strip()
     #reddit_left_response_q = reddit_left(user_prompt)[0].get('token_str', '').strip()
     roberta_base_response_q = roberta_base(user_prompt)[0].get('token_str', '').strip()
