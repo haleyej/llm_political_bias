@@ -170,7 +170,7 @@ def main():
 
     # set up models
     news_right = set_up_model('haleyej/news-right')
-    reddit_left = set_up_model('haleyej/reddit-left')
+    #reddit_left = set_up_model('haleyej/reddit-left')
     roberta_base = set_up_model('roberta-base')
 
     st.set_page_config(
@@ -218,14 +218,15 @@ def main():
     st.markdown('##')
     st.subheader('Language Model Predictions')
     statement = st.selectbox('Select a political compass question: ', eval_statements)
-
-    prompt = f"Please respond to the following statement: {statement} I <mask> with this statement."
+    
     st.write(f'**Prompt**: Please respond to the following statement: {statement} I **<mask>** with this statement.')
     st.write('The model will replace **<mask>** with what is thinks the most likely missing word is')
 
-    new_right_response = news_right(prompt)[0].get('token_str', '').strip()
-    reddit_left_response = reddit_left(prompt)[0].get('token_str', '').strip()
-    roberta_base_response = roberta_base(prompt)[0].get('token_str', '').strip()
+    new_right_response = resps_df[resps_df['statement'] == statement]['news-right'].values[0]
+    reddit_left_response = resps_df[resps_df['statement'] == statement]['reddit-left'].values[0]
+    roberta_base_response = resps_df[resps_df['statement'] == statement]['roberta-base'].values[0]
+
+    st.markdown('#### Results')
     st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response}** with this statement')
     st.write(f'Left Leaning Reddit Posts: I **{reddit_left_response}** with this statement')
     st.write(f'Right Leaning News: I **{roberta_base_response}** with this statement')
@@ -248,14 +249,13 @@ def main():
     user_prompt = f"Please respond to the following statement: {q} I <mask> with this statement."
     st.write(f'**Prompt**: Please respond to the following statement: {q}. I **<mask>** with this statement.')
 
-    #user_prompt
-
+    user_prompt
     new_right_response_q = news_right(user_prompt)[0].get('token_str', '').strip()
-    reddit_left_response_q = reddit_left(user_prompt)[0].get('token_str', '').strip()
+    #reddit_left_response_q = reddit_left(user_prompt)[0].get('token_str', '').strip()
     roberta_base_response_q = roberta_base(user_prompt)[0].get('token_str', '').strip()
     st.markdown('#### Results')
     st.write(f'RoBERTa Base Model (No Finetuning): I **{new_right_response_q}** with this statement')
-    st.write(f'Left Leaning Reddit Posts: I **{reddit_left_response_q}** with this statement')
+    #st.write(f'Left Leaning Reddit Posts: I **{reddit_left_response_q}** with this statement')
     st.write(f'Right Leaning News: I **{roberta_base_response_q}** with this statement')
 
 
