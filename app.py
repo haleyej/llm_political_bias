@@ -113,7 +113,12 @@ def generate_compass_plot(eval_df: pd.DataFrame):
                 domain = False
             ).properties(
                 width = 450, 
-                height = 400
+                height = 400, 
+                title = alt.Title('Political Compass Scores', 
+                                  subtitle = "Models pretrained on political corpora answered questions differently than the base RoBERTa model", 
+                                  fontSize = 25, 
+                                  subtitleFontSize = 14, 
+                                  dy = 15)
             ).interactive()
 
     return final
@@ -154,7 +159,7 @@ def generate_divergence_chart(resps_df:pd.DataFrame):
                                             anchor = 'start', 
                                             fontSize = 25,
                                             subtitleFontSize = 18,
-                                            dx = 15, 
+                                            dx = 27.5, 
                                             dy = -7.5),
                     height = 700, width = 700)
     return final
